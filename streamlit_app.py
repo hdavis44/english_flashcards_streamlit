@@ -5,51 +5,48 @@ import streamlit as st
 # ---------- config ----------
 
 # st.set_page_config(layout="wide")
+state = st.session_state
 
 
 # ---------- functions ----------
 
 def callback1():
-    st.session_state.button1_clicked = True
+    state.button1_clicked = True
 
 def callback2():
-    st.session_state.button2_clicked = True
+    state.button2_clicked = True
 
 def callback3():
-    st.session_state.button3_clicked = True
+    state.button3_clicked = True
 
-def callback4():
-    st.session_state.button4_clicked = True
-
-def callback5():
-    st.session_state.button5_clicked = True
-
+# def callbacktext():
+#     state.user_translation = user_translation
 
 # ---------- session state ----------
 
-if "button1_clicked" not in st.session_state:
-    st.session_state.button1_clicked = False
+if "button1_clicked" not in state:
+    state.button1_clicked = False
 
-if "button2_clicked" not in st.session_state:
-    st.session_state.button2_clicked = False
+if "button2_clicked" not in state:
+    state.button2_clicked = False
 
-if "button3_clicked" not in st.session_state:
-    st.session_state.button3_clicked = False
+if "button3_clicked" not in state:
+    state.button3_clicked = False
 
-if "button4_clicked" not in st.session_state:
-    st.session_state.button4_clicked = False
+if "df" not in state:
+    state.df = None
 
-if "button5_clicked" not in st.session_state:
-    st.session_state.button5_clicked = False
+if "question_pool" not in state:
+    state.question_pool = None
 
-if "df" not in st.session_state:
-    st.session_state.df = None
+if "df_remaining" not in state:
+    state.df_remaining = None
 
-if "question_pool" not in st.session_state:
-    st.session_state.question_pool = None
+if "current_row" not in state:
+    state.current_row = None
 
-if "current_row" not in st.session_state:
-    st.session_state.current_row = None
+if "user_translation" not in state:
+    state.user_translation = None
 
 # ---------- main page ----------
 
@@ -59,29 +56,24 @@ uploaded_file = st.file_uploader("Upload a .csv homework file", type=["csv"])
 
 if uploaded_file is not None:
 
-    if st.session_state.df is None:
-        st.session_state.df = pd.read_csv(uploaded_file, delimiter=";", usecols=["phrase","hint","translation"])
+    if state.df is None:
+        state.df = pd.read_csv(uploaded_file, delimiter=";", usecols=["phrase","hint","translation"])
 
-    st.write(f"There are {st.session_state.df.shape[0]} phrases in this file.")
+    if state.df_remaining is None:
+        state.df_remaining = state.df.copy()
 
-    col4, col5 = st.columns(2)
+    if state.question_pool is None:
+        sample_size = 20
+        if state.df_remaining.shape[0] < 20:
+            sample_size = state.df_remaining.shape[0]
+        state.question_pool = state.df_remaining.sample(sample_size, replace=False)
+        state.df_remaining = state.df_remaining[~state.df_remaining.index.isin(state.question_pool.index.to_list())]
 
-    with col4:
-        practice_twenty = st.button(
-            "Practice twenty phrases", on_click=callback4, use_container_width=True
-        )
-
-    with col5:
-        practice_all = st.button(
-            "Practice all phrases", on_click=callback5, use_container_width=True
-        )
+    st.write(
+        f"There are {state.df.shape[0]} phrases in this file. Selecting {state.question_pool.shape[0]} random phrases to practice with."
+    )
 
     st.divider()
-
-    # if practice_twenty:
-    #     st.session_state.button1_clicked = False
-    #     st.session_state.button2_clicked = False
-    #     st.session_state.button3_clicked = False
 
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -98,34 +90,39 @@ if uploaded_file is not None:
         translation = st.button(
             "Show translation", on_click=callback3, use_container_width=True
         )
+        user_translation = st.text_input(
+            "translation",
+            label_visibility="collapsed",
+            key="user_translation",
+            placeholder="my translation"
+        )
 
     if phrase:
 
-        if st.session_state.question_pool is None:
-            st.session_state.question_pool = st.session_state.df.sample(20)
+        if state.question_pool is None:
+            state.question_pool = state.df.sample(20)
 
-        st.session_state.current_row = st.session_state.question_pool.sample()
-        st.session_state.current_index = st.session_state.current_row.index
-        st.session_state.current_phrase = st.session_state.current_row["phrase"].item()
-        st.session_state.current_hint = st.session_state.current_row["hint"].item()
-        st.session_state.current_translation = st.session_state.current_row["translation"].item()
+        state.current_row = state.question_pool.sample()
+        state.current_index = state.current_row.index
+        state.current_phrase = state.current_row["phrase"].item()
+        state.current_hint = state.current_row["hint"].item()
+        state.current_translation = state.current_row["translation"].item()
 
         with col1:
-            st.markdown(st.session_state.current_phrase)
+            st.markdown(state.current_phrase)
 
-    if hint:
-        if st.session_state.button1_clicked:
+    elif hint:
+        if state.button1_clicked:
             with col1:
-                st.markdown(st.session_state.current_phrase)
+                st.markdown(state.current_phrase)
             with col2:
-                st.markdown(st.session_state.current_hint)
+                st.markdown(state.current_hint)
 
-    if translation:
-        if st.session_state.button2_clicked:
-            if st.session_state.button1_clicked:
-                with col1:
-                    st.markdown(st.session_state.current_phrase)
-                with col2:
-                    st.markdown(st.session_state.current_hint)
-                with col3:
-                    st.markdown(st.session_state.current_translation)
+    elif translation or user_translation:
+        if state.button1_clicked:
+            with col1:
+                st.markdown(state.current_phrase)
+            with col2:
+                st.markdown(state.current_hint)
+            with col3:
+                st.markdown(state.current_translation)

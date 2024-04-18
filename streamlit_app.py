@@ -113,6 +113,10 @@ if uploaded_file is not None:
 
     if phrase:
 
+        state.user_translation = None
+        # state.button2_clicked = False
+        # state.button3_clicked = False
+
         if state.question_pool is None:
             state.question_pool = state.df.sample(20)
 

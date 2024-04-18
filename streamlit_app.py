@@ -66,15 +66,15 @@ if uploaded_file is not None:
 
     col4, col5 = st.columns(2)
 
-    # with col4:
-    #     practice_twenty = st.button(
-    #         "Practice twenty phrases", on_click=callback4, use_container_width=True
-    #     )
+    with col4:
+        practice_twenty = st.button(
+            "Practice twenty phrases", on_click=callback4, use_container_width=True
+        )
 
-    # with col5:
-    #     practice_all = st.button(
-    #         "Practice all phrases", on_click=callback5, use_container_width=True
-    #     )
+    with col5:
+        practice_all = st.button(
+            "Practice all phrases", on_click=callback5, use_container_width=True
+        )
 
     st.divider()
 

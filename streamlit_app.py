@@ -67,7 +67,7 @@ if "current_row" not in state:
 if "user_translation" not in state:
     state.user_translation = None
 
-SAMPLE_SIZE = 20
+SAMPLE_SIZE = 10
 
 # ---------- main page ----------
 
@@ -152,33 +152,43 @@ if uploaded_file is not None:
         incorrect = st.button(":x:", on_click=callback5, use_container_width=True)
 
     if correct:
-        state.df_complete.loc[state.current_index[0]] = state.current_row.loc[state.current_index[0]]
-        state.df_question_pool.drop(index=state.current_index, inplace=True)
-        if state.df_question_pool.shape[0] == 0:
-            state.df_question_pool = state.df_review.copy()
-            state.df_review = pd.DataFrame({"phrase":[], "hint":[], "translation":[]})
+        try:
+            state.df_complete.loc[state.current_index[0]] = state.current_row.loc[state.current_index[0]]
+            state.df_question_pool.drop(index=state.current_index, inplace=True)
+
             if state.df_question_pool.shape[0] == 0:
-                if state.df_remaining.shape[0] < SAMPLE_SIZE:
-                    state.df_question_pool = state.df_remaining.copy()
-                else:
-                    state.df_question_pool = state.df_remaining.sample(SAMPLE_SIZE)
-                state.df_remaining = state.df_remaining[~state.df_remaining.index.isin(state.df_question_pool.index.to_list())]
+                state.df_question_pool = state.df_review.copy()
+                state.df_review = pd.DataFrame({"phrase":[], "hint":[], "translation":[]})
+                if state.df_question_pool.shape[0] == 0:
+                    if state.df_remaining.shape[0] < SAMPLE_SIZE:
+                        state.df_question_pool = state.df_remaining.copy()
+                        if state.df_question_pool.shape[0] == 0:
+                            st.empty()
+                            st.markdown("![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)")
+                    else:
+                        state.df_question_pool = state.df_remaining.sample(SAMPLE_SIZE)
+                    state.df_remaining = state.df_remaining[~state.df_remaining.index.isin(state.df_question_pool.index.to_list())]
+        except KeyError:
+            st.markdown("Get a new phrase first")
+            pass
 
     elif incorrect:
-        state.df_review.loc[state.current_index[0]] = state.current_row.loc[state.current_index[0]]
-        state.df_question_pool.drop(index=state.current_index, inplace=True)
+        try:
+            state.df_review.loc[state.current_index[0]] = state.current_row.loc[state.current_index[0]]
+            state.df_question_pool.drop(index=state.current_index, inplace=True)
 
-        if state.df_question_pool.shape[0] == 0:
-            state.df_question_pool = state.df_review.copy()
-            state.df_review = pd.DataFrame({"phrase":[], "hint":[], "translation":[]})
             if state.df_question_pool.shape[0] == 0:
-                if state.df_remaining.shape[0] < SAMPLE_SIZE:
-                    state.df_question_pool = state.df_remaining.copy()
-                    if state.df_question_pool.shape[0] == 0:
-                        st.empty()
-                else:
-                    state.df_question_pool = state.df_remaining.sample(SAMPLE_SIZE)
-                state.df_remaining = state.df_remaining[~state.df_remaining.index.isin(state.df_question_pool.index.to_list())]
+                state.df_question_pool = state.df_review.copy()
+                state.df_review = pd.DataFrame({"phrase":[], "hint":[], "translation":[]})
+                if state.df_question_pool.shape[0] == 0:
+                    if state.df_remaining.shape[0] < SAMPLE_SIZE:
+                        state.df_question_pool = state.df_remaining.copy()
+                    else:
+                        state.df_question_pool = state.df_remaining.sample(SAMPLE_SIZE)
+                    state.df_remaining = state.df_remaining[~state.df_remaining.index.isin(state.df_question_pool.index.to_list())]
+        except KeyError:
+            st.markdown("Get a new phrase first")
+            pass
 
 # ---------- TESTING ----------
 
